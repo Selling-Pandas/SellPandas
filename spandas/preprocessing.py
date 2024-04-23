@@ -1,7 +1,13 @@
-import pandas as pd
-import matplotlib.pyplot as plt
+# stdlib
 from dataclasses import dataclass
+
+# third party
 from art import tprint
+
+import matplotlib.pyplot as plt
+
+import pandas as pd
+
 
 # write your code here
 # it is preferable to use Classes in this module
@@ -14,21 +20,21 @@ class Loggs:
     Класс отвечает за вывод логов
     Каждое поле включает или вылючает логи а конкретном этапе
 
-    test: логи на этапе тестирования датасета на "приколы" (описано в object_to_float_check)
-    cols_selection: Вывод выбранных колонок для очистки от выбросов
-    was_became: Отвечает за вывод логов типа "было-стало" (графики и т.д.)
+    test:
+    логи на этапе тестирования датасета на "приколы" (описано в object_to_float_check)
+    cols_selection:
+        Вывод выбранных колонок для очистки от выбросов
+    was_became:
+        Отвечает за вывод логов типа "было-стало" (графики и т.д.)
     """
+
     test: bool = False
     cols_selection: bool = True
     was_became: bool = True
 
 
 def get_list_of_cols(
-    df: pd.DataFrame,
-    n=2,
-    exclude=["id"],
-    method: int = 1,
-    ignore_strings: bool = True
+    df: pd.DataFrame, n=2, exclude=["id"], method: int = 1, ignore_strings: bool = True
 ):
     """
     Returns a list like:
@@ -57,9 +63,9 @@ def get_list_of_cols(
         for col in df.columns:
             if col in exclude:
                 continue
-            if df[col].dtype not in ['float64', 'int64'] and not ignore_strings:
+            if df[col].dtype not in ["float64", "int64"] and not ignore_strings:
                 continue
-            if df[col].dtype in ['float64', 'int64']:
+            if df[col].dtype in ["float64", "int64"]:
                 result.append(col)
                 continue
             str_count = sum(list(map(lambda x: not str(x).isdigit(), df[col].unique())))
@@ -82,7 +88,8 @@ def mark_outliers(series: pd.Series, method: int = 1):
     Parameters
     ----------
     series : pd.Series
-        Column from the pd.Dataframe or any other series with dtype in ("int64", "float64")
+        Column from the pd.Dataframe or any other series with dtype in
+        ("int64", "float64")
     method : int in (1, ) default 1
         method of marking the outliers
     ----------
@@ -90,17 +97,21 @@ def mark_outliers(series: pd.Series, method: int = 1):
     А если он False, то столбцы со строками вообще не должны выбираться, поэтому сюда
     строковые значения не попадут
     """
-    if series.dtype not in ['float64', 'int64']:
-        series_without_strings = series[series.apply(lambda x: str(x).isdigit())] \
-            .astype("float64")
+    if series.dtype not in ["float64", "int64"]:
+        series_without_strings = series[
+            series.apply(lambda x: str(x).isdigit())
+        ].astype("float64")
     if method == 1:
         q1 = series_without_strings.quantile(0.25)
         q3 = series_without_strings.quantile(0.75)
         iqr = q3 - q1
         lower_fence = q1 - 1.5 * iqr
         upper_fence = q3 + 1.5 * iqr
-        return ~series.apply(lambda x: (lower_fence <= float(x) <= upper_fence
-                                        if str(x).isdigit() else True))
+        return ~series.apply(
+            lambda x: (
+                lower_fence <= float(x) <= upper_fence if str(x).isdigit() else True
+            )
+        )
     if method == 2:
         #  here will be some method
         pass
@@ -113,7 +124,8 @@ def remove_outliers_from_series(series: pd.Series, method: int = 1):
     Parameters
     ----------
     series : pd.Series
-        Column from the pd.Dataframe or any other series with dtype in ("int64", "float64")
+        Column from the pd.Dataframe or any other series with dtype in
+        ("int64", "float64")
     method : int in (1, ) default 1
         method of marking the outliers
     """
@@ -141,8 +153,10 @@ def print_distr(
 ) -> tuple[bool, str]:
     """
     Дим, эта функция (или целый блок, их бы в отдельный подмодуль вынести)
-    Пока что она вызывается автоматически в data_preprocessing в конце, в was-became logging части
-    Параметры там, всё остальное, всё поменяешь, пока-что док не нужен т.к. вызывается автоматически
+    Пока что она вызывается автоматически в data_preprocessing в конце, в was-became
+    logging части
+    Параметры там, всё остальное, всё поменяешь, пока-что док не нужен т.к. вызывается
+    автоматически
     """
     try:
         _, axes = plt.subplots(
@@ -240,9 +254,12 @@ def data_preprocessing(
         marks = mark_outliers(clear_df[col], method=delete_method)
         if save_deleted:
             deleted[col] = {}
-            deleted[col]["count"] = (sum(marks))
-            deleted[col]["deleted"] = dict(zip(list(clear_df[marks][col].keys()),
-                                               list(clear_df[marks][col].values)))
+            deleted[col]["count"] = sum(marks)
+            deleted[col]["deleted"] = dict(
+                zip(
+                    list(clear_df[marks][col].keys()), list(clear_df[marks][col].values)
+                )
+            )
             print(f"column: {col} => deleted: {deleted[col]['count']}")
         clear_df = clear_df[~marks]
     if logging.was_became:
@@ -254,7 +271,7 @@ def data_preprocessing(
     return clear_df, deleted
 
 
-def object_to_float_check(df: pd.DataFrame, autofix: bool=True, logging=False):
+def object_to_float_check(df: pd.DataFrame, autofix: bool = True, logging=False):
     """
     Герман попросил
     Идея в чём, в датасете могут быть столбцы типа object но при этом в них только числа
