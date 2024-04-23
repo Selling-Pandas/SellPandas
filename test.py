@@ -6,6 +6,4 @@ from spandas.preprocessing import *
 
 df = pd.read_excel("C:\\Users\\Vex\\ProgaMain\\Selling Pandas\\spandas\\ecology.xlsx")
 
-exc = ['id', 'b5', 'g1a', 'j30_environment_pos']
-
-
+exc = ["id", "b5", "g1a", "j30_environment_pos"]
