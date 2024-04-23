@@ -7,18 +7,25 @@ from art import tprint
 # it is preferable to use Classes in this module
 # also use type annotations to make code more clear and efficient to write
 
+
 @dataclass
 class Loggs:
-    """ Класс отвечает за вывод логов
+    """
+    Класс отвечает за вывод логов
     Объект класса буквально такой: тут логи пиши, а тут логи не пиши
-    Такой объект передаётся в качестве параметра в основную функцию data_preprocessing"""
+    Такой объект передаётся в качестве параметра в основную функцию data_preprocessing
+    """
     test: bool = False
     cols_selection: bool = True
     was_became: bool = True
 
 
 def get_list_of_cols(
-    df: pd.DataFrame, n=2, exclude=["id"], method: int = 1, ignore_strings: bool = True
+    df: pd.DataFrame,
+    n=2,
+    exclude=["id"],
+    method: int = 1,
+    ignore_strings: bool = True
 ):
     """
     Returns a list like:
@@ -72,16 +79,18 @@ def mark_outliers(series: pd.Series, method: int = 1):
     строковые значения не попадут
     """
     if series.dtype not in ['float64', 'int64']:
-        series_without_strings = series[series.apply(lambda x: str(x).isdigit())].astype("float64")
+        series_without_strings = series[series.apply(lambda x: str(x).isdigit())] \
+            .astype("float64")
     if method == 1:
         q1 = series_without_strings.quantile(0.25)
         q3 = series_without_strings.quantile(0.75)
         iqr = q3 - q1
         lower_fence = q1 - 1.5 * iqr
         upper_fence = q3 + 1.5 * iqr
-        return ~series.apply(lambda x: (lower_fence <= float(x) <= upper_fence if str(x).isdigit() else True))
+        return ~series.apply(lambda x: (lower_fence <= float(x) <= upper_fence
+                                        if str(x).isdigit() else True))
     if method == 2:
-        #here will be some method
+        #  here will be some method
         pass
 
 
@@ -90,7 +99,7 @@ def remove_outliers_from_series(series: pd.Series, method: int = 1):
 
 
 def remove_outliers(df: pd.DataFrame, columns: list[str] = None, method: int = 1):
-    return df[~sum(mark_outliers(df[col], method=method) for col in columns).astype(bool)]
+    return df[~sum(mark_outliers(df[co], method=method) for co in columns).astype(bool)]
 
 
 def print_distr(
@@ -192,7 +201,8 @@ def data_preprocessing(
         if save_deleted:
             deleted[col] = {}
             deleted[col]["count"] = (sum(marks))
-            deleted[col]["deleted"] = dict(zip(list(clear_df[marks][col].keys()), list(clear_df[marks][col].values)))
+            deleted[col]["deleted"] = dict(zip(list(clear_df[marks][col].keys()),
+                                               list(clear_df[marks][col].values)))
             print(f"column: {col} => deleted: {deleted[col]['count']}")
         clear_df = clear_df[~marks]
     if logging.was_became:
@@ -222,4 +232,3 @@ def test_df(df: pd.DataFrame, autofix=1, logging=False):
             df[col] = df[col].astype(float)
 
     return df
-
