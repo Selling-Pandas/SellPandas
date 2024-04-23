@@ -12,8 +12,11 @@ from art import tprint
 class Loggs:
     """
     Класс отвечает за вывод логов
-    Объект класса буквально такой: тут логи пиши, а тут логи не пиши
-    Такой объект передаётся в качестве параметра в основную функцию data_preprocessing
+    Каждое поле включает или вылючает логи а конкретном этапе
+
+    test: логи на этапе тестирования датасета на "приколы" (описано в object_to_float_check)
+    cols_selection: Вывод выбранных колонок для очистки от выбросов
+    was_became: Отвечает за вывод логов типа "было-стало" (графики и т.д.)
     """
     test: bool = False
     cols_selection: bool = True
@@ -74,6 +77,15 @@ def get_list_of_cols(
 
 def mark_outliers(series: pd.Series, method: int = 1):
     """
+    returns a Series of bool values. True if element is outlier
+
+    Parameters
+    ----------
+    series : pd.Series
+        Column from the pd.Dataframe or any other series with dtype in ("int64", "float64")
+    method : int in (1, ) default 1
+        method of marking the outliers
+    ----------
     Здесь не используется ignore_string т.к. если он True, то строки и так сохраняются
     А если он False, то столбцы со строками вообще не должны выбираться, поэтому сюда
     строковые значения не попадут
@@ -95,22 +107,49 @@ def mark_outliers(series: pd.Series, method: int = 1):
 
 
 def remove_outliers_from_series(series: pd.Series, method: int = 1):
+    """
+    returns series without outliers
+
+    Parameters
+    ----------
+    series : pd.Series
+        Column from the pd.Dataframe or any other series with dtype in ("int64", "float64")
+    method : int in (1, ) default 1
+        method of marking the outliers
+    """
     return series[~mark_outliers(series, method=method)]
 
 
-def remove_outliers(df: pd.DataFrame, columns: list[str] = None, method: int = 1):
+def remove_outliers(df: pd.DataFrame, columns: list[str] = [], method: int = 1):
+    """
+    returns your df without outliers
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Your main pandas dataframe
+    method : int in (1, ) default 1
+        method of marking the outliers
+    columns: list[str] default []
+        List of columns you want to clear of outliers
+    """
     return df[~sum(mark_outliers(df[co], method=method) for co in columns).astype(bool)]
 
 
 def print_distr(
     df: pd.DataFrame, cols: dict, figsize: tuple[int, int] = (30, 30), bins: int = 100
 ) -> tuple[bool, str]:
+    """
+    Дим, эта функция (или целый блок, их бы в отдельный подмодуль вынести)
+    Пока что она вызывается автоматически в data_preprocessing в конце, в was-became logging части
+    Параметры там, всё остальное, всё поменяешь, пока-что док не нужен т.к. вызывается автоматически
+    """
     try:
         _, axes = plt.subplots(
             (len(cols) // 2) + (1 if len(cols) % 2 > 0 else 0),
             2,
             figsize=figsize,
-        )  # не читайте, не надо, это просто работает, ок?
+        )
         i, j, max_i = (
             0,
             0,
@@ -124,9 +163,6 @@ def print_distr(
             axes[i, j].set_xlabel(f"Значение переменной {col}")
             axes[i, j].set_ylabel("Частота")
             axes[i, j].set_title(f"График распределения переменной {col}")
-            # axes[i, j].set_xticks(range())
-            # axes[i, j].set_xlim(min(-1000, col_of_nums.min()), col_of_nums.max())
-            # axes[i, j].set_ylim(0, 1500)
             i += 1
             if i == max_i:
                 j += 1
@@ -136,26 +172,6 @@ def print_distr(
     except Exception as ex:
         return False, str(ex)
     return True, ""
-
-
-def is_el_ok(
-    elem: str,
-    Q3: int,
-    Q1: int,
-    value_for_str=True,
-    value_for_nan=True,
-):
-    if not elem.isdigit():
-        return value_for_str
-    elem = float(elem)
-    IQR = Q3 - Q1
-    lower_bound = Q1 - 1.5 * IQR
-    upper_bound = Q3 + 1.5 * IQR
-    if lower_bound <= elem <= upper_bound:
-        return True
-    if elem != elem:
-        return value_for_nan
-    return False
 
 
 def data_preprocessing(
@@ -168,7 +184,45 @@ def data_preprocessing(
     ignore_strings: bool = True,
     exclude: list[str] = ["id"],
 ):
-    df = test_df(df, logging=logging.test)
+    """
+    Returns two values: clear dataframe and dict of deleted values
+
+    clear_df = pd.Dataframe without outliers
+
+    deleted = {  # not empty only if save_deleted is True
+        method: "iqr" or smthg else
+        column: {
+            count: (count of deleted elements)
+            deleted: {
+                id: value,
+                id: value,
+                ...
+            }
+        },
+        ...
+    }
+
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Your main pandas dataframe
+    n : int
+        The maximum allowed number of string values per column (for selection columns)
+    exclude : list[str], default ["id"]
+        The columns you want to exclude
+    select_method : int in (1, 2), default 1
+        The method of selecting the columns
+    delete_method : int in (1, ), default 1
+        The method of deleting the outliers
+    ignore_strings : bool, default True
+        Flag for ignoring strings in columns
+    save_deleted : bool, default True
+        Flag for saving and returns deleted values
+    logging : Loggs
+        object of class Loggs (it consists of flags for logging, look class Loggs)
+    """
+    df = object_to_float_check(df, logging=logging.test)
 
     cols = get_list_of_cols(
         df=df, n=n, exclude=exclude, method=select_method, ignore_strings=ignore_strings
@@ -182,20 +236,6 @@ def data_preprocessing(
 
     clear_df = df.copy(deep=True)
     deleted = {}
-    """
-    deleted = {  # not empty only if save_deleted is True
-        method: "iqr" or smthg else
-        column: {
-            count: (count of deleted elements)
-            deleted: {
-                id: value,
-                id: value,
-                ...
-            }
-        },
-        ...
-    }
-    """
     for col in cols:
         marks = mark_outliers(clear_df[col], method=delete_method)
         if save_deleted:
@@ -214,11 +254,21 @@ def data_preprocessing(
     return clear_df, deleted
 
 
-def test_df(df: pd.DataFrame, autofix=1, logging=False):
+def object_to_float_check(df: pd.DataFrame, autofix: bool=True, logging=False):
     """
     Герман попросил
     Идея в чём, в датасете могут быть столбцы типа object но при этом в них только числа
     Эта фанка это находит и меняет тип столбца
+    Всегда вызывается автоматически из data_preprocessing
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Your main pandas dataframe
+    autofix : bool default True
+        Flag for autofixing the problem
+    logging : bool default False
+        Flag for logging the process
     """
     testing = df.select_dtypes(include="object")
     bad_columns = []
