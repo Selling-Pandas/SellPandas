@@ -1,0 +1,6 @@
+[flake8]
+max-line-length = 89
+import-style-order = google
+inline-quotes = double
+
+ignore=T201
