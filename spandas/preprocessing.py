@@ -1,8 +1,13 @@
-import pandas as pd
+
 from dataclasses import dataclass
+
+# third party
 from art import tprint
 from spandas.plots import print_distributions
 from spandas.utils import is_float
+
+import pandas as pd
+
 
 # write your code here
 # it is preferable to use Classes in this module
@@ -13,20 +18,23 @@ from spandas.utils import is_float
 class Loggs:
     """
     Класс отвечает за вывод логов
-    Объект класса буквально такой: тут логи пиши, а тут логи не пиши
-    Такой объект передаётся в качестве параметра в основную функцию data_preprocessing
+    Каждое поле включает или вылючает логи а конкретном этапе
+
+    test:
+    логи на этапе тестирования датасета на "приколы" (описано в object_to_float_check)
+    cols_selection:
+        Вывод выбранных колонок для очистки от выбросов
+    was_became:
+        Отвечает за вывод логов типа "было-стало" (графики и т.д.)
     """
+
     test: bool = False
     cols_selection: bool = True
     was_became: bool = True
 
 
 def get_list_of_cols(
-    df: pd.DataFrame,
-    n=2,
-    exclude=["id"],
-    method: int = 1,
-    ignore_strings: bool = True
+    df: pd.DataFrame, n=2, exclude=["id"], method: int = 1, ignore_strings: bool = True
 ):
     """
     Returns a list like:
@@ -55,9 +63,9 @@ def get_list_of_cols(
         for col in df.columns:
             if col in exclude:
                 continue
-            if df[col].dtype not in ['float64', 'int64'] and not ignore_strings:
+            if df[col].dtype not in ["float64", "int64"] and not ignore_strings:
                 continue
-            if df[col].dtype in ['float64', 'int64']:
+            if df[col].dtype in ["float64", "int64"]:
                 result.append(col)
                 continue
             str_count = sum(list(map(lambda x: not str(x).isdigit(), df[col].unique())))
@@ -75,11 +83,20 @@ def get_list_of_cols(
 
 def mark_outliers(series: pd.Series, method: int = 1):
     """
+    returns a Series of bool values. True if element is outlier
+
+    Parameters
+    ----------
+    series : pd.Series
+        Column from the pd.Dataframe or any other series with dtype in
+        ("int64", "float64")
+    method : int in (1, ) default 1
+        method of marking the outliers
+    ----------
     Здесь не используется ignore_string т.к. если он True, то строки и так сохраняются
     А если он False, то столбцы со строками вообще не должны выбираться, поэтому сюда
     строковые значения не попадут
     """
-    series_without_strings = series.copy(deep=True)
     if series.dtype not in ['float64', 'int64']:
         series_without_strings = series[series.apply(lambda x: str(x).isdigit())] \
             .astype("float64")
@@ -99,10 +116,33 @@ def mark_outliers(series: pd.Series, method: int = 1):
 
 
 def remove_outliers_from_series(series: pd.Series, method: int = 1):
+    """
+    returns series without outliers
+
+    Parameters
+    ----------
+    series : pd.Series
+        Column from the pd.Dataframe or any other series with dtype in
+        ("int64", "float64")
+    method : int in (1, ) default 1
+        method of marking the outliers
+    """
     return series[~mark_outliers(series, method=method)]
 
 
-def remove_outliers(df: pd.DataFrame, columns: list[str] = None, method: int = 1):
+def remove_outliers(df: pd.DataFrame, columns: list[str] = [], method: int = 1):
+    """
+    returns your df without outliers
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Your main pandas dataframe
+    method : int in (1, ) default 1
+        method of marking the outliers
+    columns: list[str] default []
+        List of columns you want to clear of outliers
+    """
     return df[~sum(mark_outliers(df[co], method=method) for co in columns).astype(bool)]
 
 
@@ -116,7 +156,45 @@ def data_preprocessing(
     ignore_strings: bool = True,
     exclude: list[str] = ["id"],
 ):
-    df = test_df(df, logging=logging.test)
+    """
+    Returns two values: clear dataframe and dict of deleted values
+
+    clear_df = pd.Dataframe without outliers
+
+    deleted = {  # not empty only if save_deleted is True
+        method: "iqr" or smthg else
+        column: {
+            count: (count of deleted elements)
+            deleted: {
+                id: value,
+                id: value,
+                ...
+            }
+        },
+        ...
+    }
+
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Your main pandas dataframe
+    n : int
+        The maximum allowed number of string values per column (for selection columns)
+    exclude : list[str], default ["id"]
+        The columns you want to exclude
+    select_method : int in (1, 2), default 1
+        The method of selecting the columns
+    delete_method : int in (1, ), default 1
+        The method of deleting the outliers
+    ignore_strings : bool, default True
+        Flag for ignoring strings in columns
+    save_deleted : bool, default True
+        Flag for saving and returns deleted values
+    logging : Loggs
+        object of class Loggs (it consists of flags for logging, look class Loggs)
+    """
+    df = object_to_float_check(df, logging=logging.test)
 
     cols = get_list_of_cols(
         df=df, n=n, exclude=exclude, method=select_method, ignore_strings=ignore_strings
@@ -130,29 +208,18 @@ def data_preprocessing(
 
     clear_df = df.copy(deep=True)
     deleted = {}
-    """
-    deleted = {  # not empty only if save_deleted is True
-        method: "iqr" or smthg else
-        column: {
-            count: (count of deleted elements)
-            deleted: {
-                id: value,
-                id: value,
-                ...
-            }
-        },
-        ...
-    }
-    """
     for col in cols:
         if col == "num_sessions":
             aaaaaaaaaaaaaa = 1
         marks = mark_outliers(clear_df[col], method=delete_method)
         if save_deleted:
             deleted[col] = {}
-            deleted[col]["count"] = (sum(marks))
-            deleted[col]["deleted"] = dict(zip(list(clear_df[marks][col].keys()),
-                                               list(clear_df[marks][col].values)))
+            deleted[col]["count"] = sum(marks)
+            deleted[col]["deleted"] = dict(
+                zip(
+                    list(clear_df[marks][col].keys()), list(clear_df[marks][col].values)
+                )
+            )
             print(f"column: {col} => deleted: {deleted[col]['count']}")
         clear_df = clear_df[~marks]
     if logging.was_became:
@@ -164,11 +231,21 @@ def data_preprocessing(
     return clear_df, deleted
 
 
-def test_df(df: pd.DataFrame, autofix=1, logging=False):
+def object_to_float_check(df: pd.DataFrame, autofix: bool = True, logging=False):
     """
     Герман попросил
     Идея в чём, в датасете могут быть столбцы типа object но при этом в них только числа
     Эта фанка это находит и меняет тип столбца
+    Всегда вызывается автоматически из data_preprocessing
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Your main pandas dataframe
+    autofix : bool default True
+        Flag for autofixing the problem
+    logging : bool default False
+        Flag for logging the process
     """
     testing = df.select_dtypes(include="object")
     bad_columns = []
