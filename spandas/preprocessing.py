@@ -1,5 +1,4 @@
 import pandas as pd
-import matplotlib.pyplot as plt
 from dataclasses import dataclass
 from art import tprint
 from spandas.plots import print_distr
@@ -172,10 +171,10 @@ def data_preprocessing(
         clear_df = clear_df[~marks]
     if logging.was_became:
         tprint("WAS:")
-        print_distr(df, cols, (10, 13))
+        print_distr(df, cols)
         tprint("__________")
         tprint("BECAME:")
-        print_distr(clear_df, cols, (10, 13))
+        print_distr(clear_df, cols)
     return clear_df, deleted
 
 

@@ -14,8 +14,8 @@ def subplots(nplots: int, figsize: Tuple[int, int] = ()):
 
     plt.rcParams["font.family"] = "HSE Sans"
     plt.rcParams["font.size"] = 32
-    #  сменить цвет графика на голубой
-    plt.rcParams["axes.prop_cycle"] = plt.cycler(color=["#0072B2"])
+    #  сменить цвет графика на тёмнно-синий
+    plt.rcParams["axes.prop_cycle"] = plt.cycler(color=["#01287a"])
     n = (nplots // 2) + nplots % 2
     if not figsize:
         figsize = (20, 10 * n)
@@ -31,7 +31,7 @@ def print_distr(
     df: DataFrame, cols: dict, figsize: tuple[int, int] = (30, 30), bins: int = 100
 ) -> tuple[bool, str]:
     try:
-        _, axes = plt.subplots(
+        _, axes = subplots(
             len(cols),
             figsize=figsize,
         )
