@@ -5,8 +5,6 @@ from dataclasses import dataclass
 from art import tprint
 from spandas.plots import print_distr
 
-import matplotlib.pyplot as plt
-
 import pandas as pd
 
 
