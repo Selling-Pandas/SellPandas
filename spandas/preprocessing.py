@@ -1,7 +1,8 @@
 import pandas as pd
 from dataclasses import dataclass
 from art import tprint
-from spandas.plots import print_distr
+from spandas.plots import print_distributions
+from spandas.utils import is_float
 
 # write your code here
 # it is preferable to use Classes in this module
@@ -78,6 +79,7 @@ def mark_outliers(series: pd.Series, method: int = 1):
     А если он False, то столбцы со строками вообще не должны выбираться, поэтому сюда
     строковые значения не попадут
     """
+    series_without_strings = series.copy(deep=True)
     if series.dtype not in ['float64', 'int64']:
         series_without_strings = series[series.apply(lambda x: str(x).isdigit())] \
             .astype("float64")
@@ -88,10 +90,12 @@ def mark_outliers(series: pd.Series, method: int = 1):
         lower_fence = q1 - 1.5 * iqr
         upper_fence = q3 + 1.5 * iqr
         return ~series.apply(lambda x: (lower_fence <= float(x) <= upper_fence
-                                        if str(x).isdigit() else True))
+                                        if is_float(str(x)) else True))
     if method == 2:
-        #  here will be some method
-        pass
+        q05 = series_without_strings.quantile(0.05)
+        q95 = series_without_strings.quantile(0.95)
+        return ~series.apply(lambda x: (q05 <= float(x) <= q95
+                                        if is_float(str(x)) else True))
 
 
 def remove_outliers_from_series(series: pd.Series, method: int = 1):
@@ -100,26 +104,6 @@ def remove_outliers_from_series(series: pd.Series, method: int = 1):
 
 def remove_outliers(df: pd.DataFrame, columns: list[str] = None, method: int = 1):
     return df[~sum(mark_outliers(df[co], method=method) for co in columns).astype(bool)]
-
-
-def is_el_ok(
-    elem: str,
-    Q3: int,
-    Q1: int,
-    value_for_str=True,
-    value_for_nan=True,
-):
-    if not elem.isdigit():
-        return value_for_str
-    elem = float(elem)
-    IQR = Q3 - Q1
-    lower_bound = Q1 - 1.5 * IQR
-    upper_bound = Q3 + 1.5 * IQR
-    if lower_bound <= elem <= upper_bound:
-        return True
-    if elem != elem:
-        return value_for_nan
-    return False
 
 
 def data_preprocessing(
@@ -161,6 +145,8 @@ def data_preprocessing(
     }
     """
     for col in cols:
+        if col == "num_sessions":
+            aaaaaaaaaaaaaa = 1
         marks = mark_outliers(clear_df[col], method=delete_method)
         if save_deleted:
             deleted[col] = {}
@@ -171,10 +157,10 @@ def data_preprocessing(
         clear_df = clear_df[~marks]
     if logging.was_became:
         tprint("WAS:")
-        print_distr(df, cols)
+        print_distributions(df, cols)
         tprint("__________")
         tprint("BECAME:")
-        print_distr(clear_df, cols)
+        print_distributions(clear_df, cols)
     return clear_df, deleted
 
 

@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib import font_manager
 from pandas import DataFrame
+from spandas.utils import is_float
 
 from typing import Tuple
 
@@ -27,7 +28,7 @@ def subplots(nplots: int, figsize: Tuple[int, int] = ()):
     return fig, axes
 
 
-def print_distr(
+def print_distributions(
     df: DataFrame, cols: dict, figsize: tuple[int, int] = (30, 30), bins: int = 100
 ) -> tuple[bool, str]:
     try:
@@ -42,9 +43,9 @@ def print_distr(
         )
         for col in cols:
             col_of_nums = df[col].apply(
-                lambda x: (-1000 if (not str(x).isdigit() or x != x) else float(x))
+                lambda x: (-1000 if (not is_float(str(x)) or x != x) else float(x))
             )  # x != x only when x is NaN
-            axes[i, j].hist(col_of_nums, bins=bins)
+            axes[i, j].hist(col_of_nums)
             axes[i, j].set_xlabel(f"Значение переменной {col}")
             axes[i, j].set_ylabel("Частота")
             axes[i, j].set_title(f"График распределения переменной {col}")
