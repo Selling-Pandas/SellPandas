@@ -68,7 +68,7 @@ def get_list_of_cols(
             if df[col].dtype in ["float64", "int64"]:
                 result.append(col)
                 continue
-            str_count = sum(list(map(lambda x: not str(x).isdigit(), df[col].unique())))
+            str_count = sum(list(map(lambda x: not is_float(str(x)), df[col].unique())))
             if str_count <= n:
                 result.append(col)
         return result
@@ -97,8 +97,9 @@ def mark_outliers(series: pd.Series, method: int = 1):
     А если он False, то столбцы со строками вообще не должны выбираться, поэтому сюда
     строковые значения не попадут
     """
+    series_without_strings = series.copy(deep=True)
     if series.dtype not in ['float64', 'int64']:
-        series_without_strings = series[series.apply(lambda x: str(x).isdigit())] \
+        series_without_strings = series[series.apply(lambda x: is_float(str(x)))] \
             .astype("float64")
     if method == 1:
         q1 = series_without_strings.quantile(0.25)
