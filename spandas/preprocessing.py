@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from dataclasses import dataclass
 from art import tprint
+from spandas.plots import print_distr
 
 # write your code here
 # it is preferable to use Classes in this module
@@ -100,42 +101,6 @@ def remove_outliers_from_series(series: pd.Series, method: int = 1):
 
 def remove_outliers(df: pd.DataFrame, columns: list[str] = None, method: int = 1):
     return df[~sum(mark_outliers(df[co], method=method) for co in columns).astype(bool)]
-
-
-def print_distr(
-    df: pd.DataFrame, cols: dict, figsize: tuple[int, int] = (30, 30), bins: int = 100
-) -> tuple[bool, str]:
-    try:
-        _, axes = plt.subplots(
-            (len(cols) // 2) + (1 if len(cols) % 2 > 0 else 0),
-            2,
-            figsize=figsize,
-        )  # не читайте, не надо, это просто работает, ок?
-        i, j, max_i = (
-            0,
-            0,
-            (len(cols) // 2) + (1 if len(cols) % 2 > 0 else 0),
-        )
-        for col in cols:
-            col_of_nums = df[col].apply(
-                lambda x: (-1000 if (not str(x).isdigit() or x != x) else float(x))
-            )  # x != x only when x is NaN
-            axes[i, j].hist(col_of_nums, bins=bins)
-            axes[i, j].set_xlabel(f"Значение переменной {col}")
-            axes[i, j].set_ylabel("Частота")
-            axes[i, j].set_title(f"График распределения переменной {col}")
-            # axes[i, j].set_xticks(range())
-            # axes[i, j].set_xlim(min(-1000, col_of_nums.min()), col_of_nums.max())
-            # axes[i, j].set_ylim(0, 1500)
-            i += 1
-            if i == max_i:
-                j += 1
-                i = 0
-        plt.tight_layout()
-        plt.show()
-    except Exception as ex:
-        return False, str(ex)
-    return True, ""
 
 
 def is_el_ok(
