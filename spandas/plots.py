@@ -29,7 +29,7 @@ def subplots(nplots: int, figsize: Tuple[int, int] = ()):
 
 
 def print_distributions(
-    df: DataFrame, cols: dict, figsize: tuple[int, int] = (30, 30), bins: int = 100
+    df: DataFrame, cols: dict, figsize: tuple[int, int] = (), bins: int = 100
 ) -> tuple[bool, str]:
     try:
         _, axes = subplots(
