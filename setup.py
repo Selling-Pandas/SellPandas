@@ -29,5 +29,5 @@ setup(
     ],
     keywords="pandas eda analysis data science",
     project_urls={"GitHub": "https://github.com/Selling-Pandas/spandas"},
-    python_requires=">=3.6",
+    python_requires=">=3.10",
 )
