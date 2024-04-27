@@ -12,7 +12,7 @@ def get_requirements():
 
 
 setup(
-    name="spandas",
+    name="SPandas",
     version="0.0.1",
     author="D1midr0sh",
     author_email="info@dimidrosh.ru",
