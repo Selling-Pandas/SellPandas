@@ -1,10 +1,15 @@
 import pandas as pd
 
-# import matplotlib.pyplot as plt
-# import seaborn as sns
-# import numpy as np
-# from spandas.preprocessing import *
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+from spandas.preprocessing import *
 
-df = pd.read_excel("C:\\Users\\Vex\\ProgaMain\\Selling Pandas\\spandas\\ecology.xlsx")
-
-exc = ["id", "b5", "g1a", "j30_environment_pos"]
+# url = "ecology.xlsx"
+# url = 'База данных Оригинал.xlsx'
+url = 'C:\\Users\\Vex1cK\\Vex\\Proga\\Selling Pandas\\spandas\\База данных Оригинал.xlsx'
+# url = "Copy of Как быть успешным в учебе.xls"
+df = pd.read_excel(url)
+exc = ['user_id']
+df=df.groupby('user_id')
+clear_df, deleted = data_preprocessing(df.sum(), select_method=2, exclude=exc, logging=Loggs(was_became=False))

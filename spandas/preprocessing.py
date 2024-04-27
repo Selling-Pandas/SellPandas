@@ -1,10 +1,10 @@
-# stdlib
+
 from dataclasses import dataclass
 
 # third party
 from art import tprint
-
-import matplotlib.pyplot as plt
+from spandas.plots import print_distributions
+from spandas.utils import is_float
 
 import pandas as pd
 
@@ -68,7 +68,7 @@ def get_list_of_cols(
             if df[col].dtype in ["float64", "int64"]:
                 result.append(col)
                 continue
-            str_count = sum(list(map(lambda x: not str(x).isdigit(), df[col].unique())))
+            str_count = sum(list(map(lambda x: not is_float(str(x)), df[col].unique())))
             if str_count <= n:
                 result.append(col)
         return result
@@ -97,24 +97,23 @@ def mark_outliers(series: pd.Series, method: int = 1):
     А если он False, то столбцы со строками вообще не должны выбираться, поэтому сюда
     строковые значения не попадут
     """
-    if series.dtype not in ["float64", "int64"]:
-        series_without_strings = series[
-            series.apply(lambda x: str(x).isdigit())
-        ].astype("float64")
+    series_without_strings = series.copy(deep=True)
+    if series.dtype not in ['float64', 'int64']:
+        series_without_strings = series[series.apply(lambda x: is_float(str(x)))] \
+            .astype("float64")
     if method == 1:
         q1 = series_without_strings.quantile(0.25)
         q3 = series_without_strings.quantile(0.75)
         iqr = q3 - q1
         lower_fence = q1 - 1.5 * iqr
         upper_fence = q3 + 1.5 * iqr
-        return ~series.apply(
-            lambda x: (
-                lower_fence <= float(x) <= upper_fence if str(x).isdigit() else True
-            )
-        )
+        return ~series.apply(lambda x: (lower_fence <= float(x) <= upper_fence
+                                        if is_float(str(x)) else True))
     if method == 2:
-        #  here will be some method
-        pass
+        q05 = series_without_strings.quantile(0.05)
+        q95 = series_without_strings.quantile(0.95)
+        return ~series.apply(lambda x: (q05 <= float(x) <= q95
+                                        if is_float(str(x)) else True))
 
 
 def remove_outliers_from_series(series: pd.Series, method: int = 1):
@@ -146,46 +145,6 @@ def remove_outliers(df: pd.DataFrame, columns: list[str] = [], method: int = 1):
         List of columns you want to clear of outliers
     """
     return df[~sum(mark_outliers(df[co], method=method) for co in columns).astype(bool)]
-
-
-def print_distr(
-    df: pd.DataFrame, cols: dict, figsize: tuple[int, int] = (30, 30), bins: int = 100
-) -> tuple[bool, str]:
-    """
-    Дим, эта функция (или целый блок, их бы в отдельный подмодуль вынести)
-    Пока что она вызывается автоматически в data_preprocessing в конце, в was-became
-    logging части
-    Параметры там, всё остальное, всё поменяешь, пока-что док не нужен т.к. вызывается
-    автоматически
-    """
-    try:
-        _, axes = plt.subplots(
-            (len(cols) // 2) + (1 if len(cols) % 2 > 0 else 0),
-            2,
-            figsize=figsize,
-        )
-        i, j, max_i = (
-            0,
-            0,
-            (len(cols) // 2) + (1 if len(cols) % 2 > 0 else 0),
-        )
-        for col in cols:
-            col_of_nums = df[col].apply(
-                lambda x: (-1000 if (not str(x).isdigit() or x != x) else float(x))
-            )  # x != x only when x is NaN
-            axes[i, j].hist(col_of_nums, bins=bins)
-            axes[i, j].set_xlabel(f"Значение переменной {col}")
-            axes[i, j].set_ylabel("Частота")
-            axes[i, j].set_title(f"График распределения переменной {col}")
-            i += 1
-            if i == max_i:
-                j += 1
-                i = 0
-        plt.tight_layout()
-        plt.show()
-    except Exception as ex:
-        return False, str(ex)
-    return True, ""
 
 
 def data_preprocessing(
@@ -264,10 +223,10 @@ def data_preprocessing(
         clear_df = clear_df[~marks]
     if logging.was_became:
         tprint("WAS:")
-        print_distr(df, cols, (10, 13))
+        print_distributions(df, cols)
         tprint("__________")
         tprint("BECAME:")
-        print_distr(clear_df, cols, (10, 13))
+        print_distributions(clear_df, cols)
     return clear_df, deleted
 
 

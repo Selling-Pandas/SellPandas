@@ -3,4 +3,6 @@ max-line-length = 89
 import-style-order = google
 inline-quotes = double
 
-ignore=T201
+ignore=
+    T201
+exclude=test.py
