@@ -210,8 +210,6 @@ def data_preprocessing(
     clear_df = df.copy(deep=True)
     deleted = {}
     for col in cols:
-        if col == "num_sessions":
-            aaaaaaaaaaaaaa = 1
         marks = mark_outliers(clear_df[col], method=delete_method)
         if save_deleted:
             deleted[col] = {}
