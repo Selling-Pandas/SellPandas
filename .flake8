@@ -7,4 +7,4 @@ ignore=
     T201
 exclude=
     test.py
-    spandas/__init__.py
+    SellPandas/__init__.py

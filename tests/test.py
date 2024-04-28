@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-from SPandas.preprocessing import *
+from SellPandas.preprocessing import *
 
 # url = "ecology.xlsx"
 # url = 'База данных Оригинал.xlsx'
