@@ -12,9 +12,9 @@ def get_requirements():
 
 
 setup(
-    name="SPandas",
+    name="SellPandas",
     version="0.0.1",
-    author="D1midr0sh",
+    author="dimidrosh",
     author_email="info@dimidrosh.ru",
     description="This is the data analysis module made by Selling Pandas team",
     long_description=readme(),
@@ -24,7 +24,7 @@ setup(
     install_requires=get_requirements(),
     classifiers=[
         "Programming Language :: Python :: 3.11",
-        "License :: Apache-2.0",
+        "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ],
     keywords="pandas eda analysis data science",

@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib import font_manager
 from pandas import DataFrame
-from SPandas.utils import is_float
+from SellPandas.utils import is_float
 
 from typing import Tuple
 

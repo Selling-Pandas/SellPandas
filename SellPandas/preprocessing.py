@@ -3,8 +3,8 @@ from dataclasses import dataclass
 
 # third party
 from art import tprint
-from SPandas.plots import print_distributions
-from SPandas.utils import is_float
+from SellPandas.plots import print_distributions
+from SellPandas.utils import is_float
 
 import pandas as pd
 
