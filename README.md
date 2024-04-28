@@ -1,10 +1,10 @@
-# SPandas
+# SellPandas
 A module, built by "Selling pandas" team
 
 ## Installation
 Using pip:
 ```shell
-pip install SPandas
+pip install SellPandas
 ```
 
 ## Quick guide
