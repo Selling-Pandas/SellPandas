@@ -5,6 +5,8 @@ import seaborn as sns
 import numpy as np
 from SellPandas.preprocessing import *
 
+# asoifdhjgflksdjfgsdklfg
+print("AGUGAGAGA")
 # url = "ecology.xlsx"
 # url = 'База данных Оригинал.xlsx'
 url = 'C:\\Users\\Vex1cK\\Vex\\Proga\\Selling Pandas\\spandas\\База данных Оригинал.xlsx'
